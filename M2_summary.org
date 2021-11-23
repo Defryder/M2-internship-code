@@ -1,0 +1,105 @@
+* Modeling scheduling policies for serverless plateforms
+  Link to the paper, presentation and code :
+  https://github.com/Defryder/M2-internship-code
+  
+** Presentation of the algorithm
+*** Objective
+    This algorithm is a scheduler, taking in tasks and machines, and
+    outputing a placement of tasks on the machines.
+    It is made to optimize 2 objectives : cost, which can represent
+    energy, and makespan of the solution.
+    The interactions between cost and makespan are shown with small
+    experiments in part 5 of the paper.
+*** How it works
+    This algorithm works in 2 parts :
+    - the linear program, that assigns tasks to machines, but the
+      assignment is not integer, so a task can be for example 1/3 on
+      machine 1, 2/3 on machine 2.
+    - a correction algorithm, that takes the solution found by the
+      linear program and makes it an integer solution, so a task is
+      assigned completly on a machine.
+      
+** Code : Linear program
+   #+begin_src python :results none :exports both :session schedule
+from mip import Model, xsum, maximize, minimize, BINARY, CONTINUOUS
+import numpy as np
+
+def LP(Cmax, Tmax, M, N, K, c, p, d, b, env):
+    
+    m = Model("LP")
+    
+    x = [[m.add_var(var_type=CONTINUOUS) for j in range(N)] for i in range(M)]
+    
+    e = [[m.add_var(var_type=CONTINUOUS) for k in range(K)] for i in range(M)]
+    
+    m.objective = minimize(xsum(xsum(c[i][j]*x[i][j] for j in range(N)) for i in range(M)) + xsum(xsum(d[i][k]*e[i][k] for k in range(K)) for i in range(M)))
+
+    # Add constraints
+    m += xsum(xsum(c[i][j]*x[i][j] for j in range(N)) for i in range(M)) + xsum(xsum(d[i][k]*e[i][k] for k in range(K)) for i in range(M)) <= Cmax
+
+    for j in range(0, N):
+        m += xsum(x[i][j] for i in range(M)) == 1
+
+    for i in range(0, M):
+        m += xsum(p[i][j]*x[i][j] for j in range(N)) + xsum(b[i][k]*e[i][k] for k in range(K)) <= Tmax
+        
+    for i in range(0, M):
+        for j in range(0, N):
+            m += x[i][j] <= e[i][env[j]]
+            
+    for k in range(0, K):
+        for j in range(0, N):
+            m += e[i][k] <= 1
+
+    m.verbose = 0
+    status = m.optimize()
+    
+    if(status.value == 0):
+        out = np.array([[float(x[i][j].x) for j in range(N)] for i in range(M)])
+    else:
+        out = 0
+    
+    if(status.value == 0):
+        out_e = np.array([[float(e[i][k].x) for k in range(K)] for i in range(M)])
+    else:
+        out_e = 0
+    
+    return status.value, out, out_e
+    #+end_src
+
+    #+begin_src python :results output :exports both :session schedule
+import numpy as np
+
+N = 7;
+M = 3;
+K = 1;
+
+c =    [[0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0]];
+
+p =    [[3, 1, 1, 1, 1, 1, 1],
+        [3, 1, 1, 1, 1, 1, 1],
+        [3, 1, 1, 1, 1, 1, 1]];
+
+d =    [[0, 0],
+        [0, 0],
+        [0, 0]];
+
+b =    [[0, 0],
+        [0, 0],
+        [0, 0]];
+
+env =  [0, 0, 0, 0, 0, 0, 0];
+
+Cmax = 0
+Tmax = 3
+
+status, x, e = LP(Cmax, Tmax, M, N, K, c, p, d, b, env)
+print("x = " + str(np.round(x, 2)))
+    #+end_src
+
+    #+RESULTS:
+    : x = [[0.33 0.   0.   0.   1.   1.   0.  ]
+    :  [0.33 0.   1.   0.   0.   0.   1.  ]
+    :  [0.33 1.   0.   1.   0.   0.   0.  ]]
