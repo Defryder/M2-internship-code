@@ -66,6 +66,10 @@ def LP(Cmax, Tmax, M, N, K, c, p, d, b, env):
     
     return status.value, out, out_e
 
+#================================================
+# Testing area
+#================================================
+
 N = 7;
 M = 3;
 K = 1;
@@ -201,6 +205,10 @@ def to_integer_solution(x, M, N, K, c, p, d, b, env):
             pass
     
     return out, out_e
+
+#================================================
+# Testing area
+#================================================
 
 x_a, e_a = to_integer_solution(x, M, N, K, c, p, d, b, env)
 
