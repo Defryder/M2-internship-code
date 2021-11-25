@@ -118,12 +118,7 @@ print(str(np.round(x, 2)))
 ** Code : Integerization (need real word as name)
    #+begin_src python :results output :exports both :session schedule
 import networkx as nx
-import itertools
-from networkx.convert_matrix import _generate_weighted_edges
-from networkx.algorithms import bipartite
 import numpy as np
-import scipy
-from scipy import sparse
 
 def to_integer_solution(x, M, N, K, c, p, d, b, env):
 
