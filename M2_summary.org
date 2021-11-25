@@ -3,6 +3,16 @@
   https://github.com/Defryder/M2-internship-code
   
 ** Presentation of the algorithm
+*** Context
+    We want to schedule containers on an edge platform. To do that, we
+    modeled containers as tasks with an environment, that is a
+    preparation phase that is necessary for the task to execute. An
+    environment can be shared by multiple tasks. The edge platform is
+    modeled by heterogeneous machines. At this point, we consider the
+    machines to be unconstrained in ressources, so the limitations are
+    artificial in the form of C (Cmax in the code) that is a limit in
+    cost, representing energy consumption for example, and T (Tmax in
+    the code) that is a limit in makespan of the solution.
 *** Objective
     This algorithm is a scheduler, taking in tasks and machines, and
     outputing a placement of tasks on the machines.
@@ -65,10 +75,6 @@ def LP(Cmax, Tmax, M, N, K, c, p, d, b, env):
         out_e = 0
     
     return status.value, out, out_e
-
-#================================================
-# Testing area
-#================================================
 
 N = 7;
 M = 3;
@@ -191,7 +197,7 @@ def to_integer_solution(x, M, N, K, c, p, d, b, env):
     #minimum weight full matching, see figure 2 of page 16
     match = nx.algorithms.bipartite.matching.minimum_weight_full_matching(B, top_nodes)
 
-    #making a decent output
+    #formating the solution
     out = np.zeros((M, N))
     out_e = np.zeros((M, K))
     
@@ -205,10 +211,6 @@ def to_integer_solution(x, M, N, K, c, p, d, b, env):
             pass
     
     return out, out_e
-
-#================================================
-# Testing area
-#================================================
 
 x_a, e_a = to_integer_solution(x, M, N, K, c, p, d, b, env)
 
